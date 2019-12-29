@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1577605010133.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1996829873",
+    "id" : "E877CF4C",
+    "lastKnownWriteTime" : 1577628685,
+    "last_content_update" : 1577628685134,
+    "path" : "~/Documents/R/Reproducible/Project_Report.rmd",
+    "project_path" : "Project_Report.rmd",
+    "properties" : {
+        "cursorPosition" : "12,18",
+        "scrollLine" : "2",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

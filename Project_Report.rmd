@@ -1,0 +1,97 @@
+---
+title: "Analyzing Storm Data to find events causing maximum damage"
+author: "Rahulg13"
+date: "29/12/2019"
+output: pdf_document
+---
+
+This report explores the NOAA dataset to answer two questions - 
+1. Which are the events most harmful to population health?
+2. Which events are associated with greatest economic consequences? 
+
+# DATA PROCESSING
+```{r, cache= TRUE}
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", "stormdata.csv.bz2", method = "curl")
+x <- read.csv("stormdata.csv.bz2")
+str(x)
+library(dplyr)
+library(ggplot2)
+```
+
+## Data Exploration
+1. On exploration of dataset, it is found there 985 event types. 
+2. We try to find out the events with - 
+        1. Maximum fatalities (FATALITIES)
+        2. Maximum injuries (INJURIES)
+        3. Maximum property damage (PROPDMG)
+        4. Maximum crop damage (CROPDMG)
+For this, we find totals of fatalities, injuries, property damage and crop damage using the function "tapply". Next, we order them in a decreasing order to help find the events causing maximum damage.
+
+```{r}
+eventwise_fat <- with(x, tapply(FATALITIES, EVTYPE, sum))
+eventwise_inj <- with(x, tapply(INJURIES, EVTYPE, sum))
+eventwise_prop <- with(x, tapply(PROPDMG, EVTYPE, sum))
+eventwise_crop <- with(x, tapply(CROPDMG, EVTYPE, sum))
+eventwise_fat <- eventwise_fat[order(eventwise_fat, decreasing = TRUE)]
+eventwise_inj <- eventwise_inj[order(eventwise_inj, decreasing = TRUE)]
+eventwise_prop <- eventwise_prop[order(eventwise_prop, decreasing = TRUE)]
+eventwise_crop <- eventwise_crop[order(eventwise_crop, decreasing = TRUE)]
+```
+
+To look at the distribution of damage among events, we draw boxplots of the four relevant variables. 
+
+```{r}
+par(mfrow = c(1, 4))
+boxplot(eventwise_fat, main = "fatalities")
+boxplot(eventwise_inj, main = "injuries")
+boxplot(eventwise_prop, main = "property damage")
+boxplot(eventwise_crop, main = "crop damage")
+```
+
+Clearly, from above, the damage caused in every type is limited to a few event types where most of the damage is concentrated. To confirm the findings above, we draw the element wise quantiles. (Note 985 is the number of type of events, so 985 quantiles represent one event for each quantile.)
+
+```{r}
+tail(quantile(eventwise_fat, prob = seq(0, 1, length.out = 985)), 5)
+tail(quantile(eventwise_inj, prob = seq(0, 1, length.out = 985)), 5)
+tail(quantile(eventwise_crop, prob = seq(0, 1, length.out = 985)), 5)
+tail(quantile(eventwise_prop, prob = seq(0, 1, length.out = 985)), 5)
+```
+
+The result confirms that top 5 events contribute more than 90% of damage in each category.
+
+## Data for final analysis and plotting
+
+To detail the events, we subset the data for top 10 categories of event types in each variable category i.e. fatalities, injuries, property damage and crop damage.
+
+```{r}
+maxfat_events <- names(eventwise_fat[1:10])
+maxinj_events <- names(eventwise_inj[1:10])
+x_final <- subset(x, EVTYPE %in% c(maxfat_events, maxinj_events))
+
+maxprop_events <- names(eventwise_prop[1:10])
+maxcrop_events <- names(eventwise_crop[1:10])
+x_final2 <- subset(x, EVTYPE %in% c(maxprop_events, maxcrop_events))
+```
+
+### New dataset for plotting effect on health of human population
+```{r}
+l <- length(x_final$FATALITIES)
+effect_count <- c(x_final$FATALITIES, x_final$INJURIES)
+effect_type <- c(rep("FATALITIES", l), rep("INJURIES", l))
+event_type <- c(x_final$EVTYPE, x_final$EVTYPE)
+x3 <- data.frame(Effect_count = effect_count, Effect_type = effect_type, Event_type =  event_type)
+
+x3$Event_type <- as.factor(x3$Event_type)
+levelnames <- as.numeric(levels(x3$Event_type))
+levelnames <- levels(x$EVTYPE)[levelnames]
+levels(x3$Event_type) <- levelnames
+```
+
+### Plot of major events harming health of human population
+```{r}
+g <- ggplot(x3) + geom_bar(aes(x = Event_type, y = Effect_count, fill = Event_type), stat = "identity")
+g <- g + facet_wrap( ~ Effect_type, scales = "free")
+g <- g + theme(axis.text.x = element_blank())
+g <- g + xlab("Event Types") + ylab("Count of human incidents")
+g
+```

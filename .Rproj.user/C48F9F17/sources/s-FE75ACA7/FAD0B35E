@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1577604538803.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FAD0B35E",
+    "lastKnownWriteTime" : 1577628280,
+    "last_content_update" : 1577628280637,
+    "path" : "~/Documents/R/Reproducible/final_project.R",
+    "project_path" : "final_project.R",
+    "properties" : {
+        "cursorPosition" : "61,0",
+        "scrollLine" : "41"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
