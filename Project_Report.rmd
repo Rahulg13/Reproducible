@@ -1,5 +1,5 @@
 ---
-title: "Analyzing Storm Data to find events causing maximum damage"
+title: "Analyzing Storm Data to find events causing maximum consequences"
 author: "Rahulg13"
 date: "29/12/2019"
 output: pdf_document
@@ -9,16 +9,15 @@ This report explores the NOAA dataset to answer two questions -
 1. Which are the events most harmful to population health?
 2. Which events are associated with greatest economic consequences? 
 
-# DATA PROCESSING
+# 1. DATA PROCESSING
+
+## 1.1 Data download and reading
 ```{r, cache= TRUE}
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", "stormdata.csv.bz2", method = "curl")
 x <- read.csv("stormdata.csv.bz2")
-str(x)
-library(dplyr)
-library(ggplot2)
 ```
 
-## Data Exploration
+## 1.2 Data Exploration
 1. On exploration of dataset, it is found there 985 event types. 
 2. We try to find out the events with - 
         1. Maximum fatalities (FATALITIES)
@@ -28,6 +27,8 @@ library(ggplot2)
 For this, we find totals of fatalities, injuries, property damage and crop damage using the function "tapply". Next, we order them in a decreasing order to help find the events causing maximum damage.
 
 ```{r}
+library(dplyr)
+library(ggplot2)
 eventwise_fat <- with(x, tapply(FATALITIES, EVTYPE, sum))
 eventwise_inj <- with(x, tapply(INJURIES, EVTYPE, sum))
 eventwise_prop <- with(x, tapply(PROPDMG, EVTYPE, sum))
@@ -57,9 +58,9 @@ tail(quantile(eventwise_crop, prob = seq(0, 1, length.out = 985)), 5)
 tail(quantile(eventwise_prop, prob = seq(0, 1, length.out = 985)), 5)
 ```
 
-The result confirms that top 5 events contribute more than 90% of damage in each category.
+The result confirms that *top 5 events contribute more than 90% of damage in each category*.
 
-## Data for final analysis and plotting
+## 1.3 Data in a format suitable for plotting
 
 To detail the events, we subset the data for top 10 categories of event types in each variable category i.e. fatalities, injuries, property damage and crop damage.
 
@@ -73,7 +74,9 @@ maxcrop_events <- names(eventwise_crop[1:10])
 x_final2 <- subset(x, EVTYPE %in% c(maxprop_events, maxcrop_events))
 ```
 
-### New dataset for plotting effect on health of human population
+### 1.4 New dataset for plotting effect on health of human population
+The dataset combines the fatalities and injuries with a separate variable/column to differentiate between the two. Event type is taken from original dataset. 
+
 ```{r}
 l <- length(x_final$FATALITIES)
 effect_count <- c(x_final$FATALITIES, x_final$INJURIES)
@@ -95,3 +98,51 @@ g <- g + theme(axis.text.x = element_blank())
 g <- g + xlab("Event Types") + ylab("Count of human incidents")
 g
 ```
+
+Similarly, we carry out the analysis for property damage and crop damage
+
+### New dataset for plotting effect on damage to property and crops
+```{r}
+l <- length(x_final2$PROPDMG)
+effect_count <- c(x_final2$PROPDMG, x_final2$CROPDMG)
+effect_type <- c(rep("PROPERTY DAMAGE", l), rep("CROP DAMAGE", l))
+event_type <- c(x_final2$EVTYPE, x_final2$EVTYPE)
+x3 <- data.frame(Effect_count = effect_count, Effect_type = effect_type, Event_type =  event_type)
+
+x3$Event_type <- as.factor(x3$Event_type)
+levelnames <- as.numeric(levels(x3$Event_type))
+levelnames <- levels(x$EVTYPE)[levelnames]
+levels(x3$Event_type) <- levelnames
+```
+
+### Plot for Property damage and Crop damage
+
+```{r}
+#plotting event wise total damage
+g <- ggplot(x3) + geom_bar(aes(x = Event_type, y = Effect_count, fill = Event_type), stat = "identity")
+g <- g + facet_wrap( ~ Effect_type, scales = "free")
+g <- g + theme(axis.text.x = element_blank())
+g <- g + xlab("Event Types") + ylab("Damage")
+g
+
+```
+
+# RESULTS
+
+Based on the analysis and plots above, following conclusions can be drawn - 
+## 1. Health of human population - 
+
+ 1. Tornadoes are, by far, the biggest cause of fatalities and injuries for population. It constitute more than 50% of both fatalities and injuries. 
+ 
+ 2. Excessive Heat is the second major cause of fatalities with flash floods at the third position
+ 
+ 3. For injuries, flash floods and hail come next to tornadoes
+        
+## 2. Economics consequences 
+
+ 1. For Crop damage, hail is the biggest cause. Flash floods and floods are distant second and third caused of crop damage. 
+ 
+ 2. For Property damage, tornadoes are the biggest reason. Flash floods comes distant second and TSTM winds are a close third. 
+ 
+        
+
